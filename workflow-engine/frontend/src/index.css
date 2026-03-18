@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #F4F4F5;
+  color: #18181B;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F4F4F5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+input, textarea, select {
+  outline: none;
+  font-family: 'Inter', sans-serif;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #A1A1AA;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Hover & Transition Utility Classes ── */
+
+.interactive {
+  transition: all 0.2s ease;
+}
+
+/* Primary orange button glow + lift */
+.btn-primary-glow {
+  transition: all 0.2s ease;
+}
+.btn-primary-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.5), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.btn-primary-glow:active {
+  transform: translateY(0);
+}
+
+/* Generic button hover lift */
+.btn-hover {
+  transition: all 0.2s ease;
+}
+.btn-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.btn-hover:active {
+  transform: translateY(0);
+}
+
+/* Card hover - soft shadow lift */
+.card-hover {
+  transition: all 0.2s ease;
+}
+.card-hover:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+}
+
+/* Table/list row hover */
+.row-hover {
+  transition: background 0.15s ease;
+}
+.row-hover:hover {
+  background: #FAFAFA !important;
+}
+
+/* Nav link hover */
+.nav-link-hover {
+  transition: all 0.15s ease;
+}
+.nav-link-hover:hover {
+  background: #FFF7ED !important;
+  color: #F97316 !important;
+}
+
+/* Text link hover */
+.link-hover {
+  transition: all 0.15s ease;
+}
+.link-hover:hover {
+  color: #F97316 !important;
+}
+
+/* Input focus glow */
+.input-focus {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-focus:focus {
+  border-color: #F97316 !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+}
+
+/* Inline action button hover (text-only buttons like Edit, Delete) */
+.action-btn-hover {
+  transition: all 0.15s ease;
+}
+.action-btn-hover:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+/* Dashed add button hover */
+.dashed-btn-hover {
+  transition: all 0.2s ease;
+}
+.dashed-btn-hover:hover {
+  border-color: #F97316 !important;
+  color: #F97316 !important;
+  background: #FFF7ED !important;
+}
+
+/* Step card hover */
+.step-card-hover {
+  transition: all 0.2s ease;
+}
+.step-card-hover:hover {
+  border-color: #F97316 !important;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1);
+}
