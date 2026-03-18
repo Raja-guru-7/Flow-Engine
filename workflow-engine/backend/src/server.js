@@ -7,7 +7,13 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://flow-engine-mu.vercel.app'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 const workflowRoutes = require('./routes/workflowRoutes');
