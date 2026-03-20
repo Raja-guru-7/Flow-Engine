@@ -96,9 +96,24 @@ export default function WorkflowEditor() {
       } else {
         const res = await createWorkflow(payload)
         const newId = res.data.data?._id || res.data._id || res.data.data?.id || res.data.id
-        setSuccess('Workflow created successfully — Loading in 10 seconds...')
-        // ✅ 3000ms wait — Render wake up aagum varaikkum
-        setTimeout(() => navigate(`/workflows/${newId}/edit`), 1000)
+        setSuccess('Workflow created — Loading...')
+
+        // ✅ Retry logic — Render wake up aagum varaikkum keep trying
+        const tryNavigateAndLoad = async (retries = 10) => {
+          try {
+            const r = await getWorkflow(newId)
+            if (r.data) {
+              navigate(`/workflows/${newId}/edit`)
+            }
+          } catch {
+            if (retries > 0) {
+              setTimeout(() => tryNavigateAndLoad(retries - 1), 3000)
+            } else {
+              setError('Server took too long. Please click Edit from Workflows list.')
+            }
+          }
+        }
+        setTimeout(() => tryNavigateAndLoad(), 3000)
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save workflow')
