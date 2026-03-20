@@ -15,6 +15,59 @@ const dangerBtn = { background: '#DC2626', color: 'white', border: 'none', borde
 const inputStyle = { width: '100%', borderRadius: '12px', border: '1px solid #E4E4E7', background: '#FFFFFF', padding: '10px 16px', fontSize: '14px', color: '#18181B', boxSizing: 'border-box' }
 const labelStyle = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 500, color: '#374151' }
 
+// ✅ Nice loading screen while Render wakes up
+function WakingUpScreen({ onGiveUp }) {
+  const [dots, setDots] = useState('.')
+  const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    const dotTimer = setInterval(() => {
+      setDots(d => d.length >= 3 ? '.' : d + '.')
+    }, 500)
+    const countTimer = setInterval(() => {
+      setElapsed(e => e + 1)
+    }, 1000)
+    return () => { clearInterval(dotTimer); clearInterval(countTimer) }
+  }, [])
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      minHeight: '60vh', gap: '24px', textAlign: 'center'
+    }}>
+      <div style={{
+        width: '64px', height: '64px', borderRadius: '9999px',
+        border: '4px solid #FED7AA', borderTopColor: '#F97316',
+        animation: 'spin 1s linear infinite'
+      }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      <div>
+        <p style={{ fontSize: '20px', fontWeight: 600, color: '#18181B', marginBottom: '8px' }}>
+          ✅ Workflow created!
+        </p>
+        <p style={{ fontSize: '14px', color: '#71717A', marginBottom: '4px' }}>
+          Server is waking up{dots}
+        </p>
+        <p style={{ fontSize: '12px', color: '#A1A1AA' }}>
+          This takes ~30 seconds on free tier ({elapsed}s)
+        </p>
+      </div>
+
+      <div style={{
+        background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '12px',
+        padding: '12px 20px', fontSize: '13px', color: '#92400E', maxWidth: '320px'
+      }}>
+        🔄 Auto-navigating to editor once ready...
+      </div>
+
+      <button onClick={onGiveUp} style={{ ...secondaryBtn, fontSize: '13px', color: '#71717A' }}>
+        Go to Workflows List
+      </button>
+    </div>
+  )
+}
+
 export default function WorkflowEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -32,6 +85,10 @@ export default function WorkflowEditor() {
   const [success, setSuccess] = useState('')
   const [jsonValid, setJsonValid] = useState(true)
 
+  // ✅ Waking up state
+  const [wakingUp, setWakingUp] = useState(false)
+  const [pendingNewId, setPendingNewId] = useState(null)
+
   const [stepModal, setStepModal] = useState(false)
   const [editingStep, setEditingStep] = useState(null)
   const [stepName, setStepName] = useState('')
@@ -46,6 +103,37 @@ export default function WorkflowEditor() {
   useEffect(() => {
     if (isEdit) loadWorkflow()
   }, [id])
+
+  // ✅ Retry loop when waking up
+  useEffect(() => {
+    if (!wakingUp || !pendingNewId) return
+
+    let cancelled = false
+    let attempts = 0
+    const maxAttempts = 20 // 20 * 3s = 60s
+
+    const tryNavigate = async () => {
+      if (cancelled) return
+      try {
+        const r = await getWorkflow(pendingNewId)
+        if (r.data && !cancelled) {
+          setWakingUp(false)
+          navigate(`/workflows/${pendingNewId}/edit`)
+        }
+      } catch {
+        attempts++
+        if (attempts < maxAttempts && !cancelled) {
+          setTimeout(tryNavigate, 3000)
+        } else if (!cancelled) {
+          setWakingUp(false)
+          navigate('/workflows')
+        }
+      }
+    }
+
+    setTimeout(tryNavigate, 2000)
+    return () => { cancelled = true }
+  }, [wakingUp, pendingNewId])
 
   const loadWorkflow = async () => {
     try {
@@ -97,7 +185,8 @@ export default function WorkflowEditor() {
         const res = await createWorkflow(payload)
         const newId = res.data.data?._id || res.data._id || res.data.data?.id || res.data.id
         if (newId) {
-          navigate(`/workflows/${newId}/edit`)
+          setPendingNewId(newId)
+          setWakingUp(true)
         } else {
           setError('Workflow created but ID missing. Please edit from Workflows list.')
         }
@@ -195,6 +284,11 @@ export default function WorkflowEditor() {
   }
 
   if (loading) return <LoadingSpinner />
+
+  // ✅ Show waking up screen after create
+  if (wakingUp) return (
+    <WakingUpScreen onGiveUp={() => { setWakingUp(false); navigate('/workflows') }} />
+  )
 
   return (
     <div>
@@ -366,7 +460,7 @@ export default function WorkflowEditor() {
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Order <span style={{ color: '#DC2326' }}>*</span></label>
+            <label style={labelStyle}>Order <span style={{ color: '#DC2626' }}>*</span></label>
             <input
               type="number"
               min="1"
