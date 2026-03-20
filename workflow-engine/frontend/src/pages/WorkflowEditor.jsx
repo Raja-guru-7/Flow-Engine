@@ -96,9 +96,9 @@ export default function WorkflowEditor() {
       } else {
         const res = await createWorkflow(payload)
         const newId = res.data.data?._id || res.data._id || res.data.data?.id || res.data.id
-        setSuccess('Workflow created successfully')
+        setSuccess('Workflow created successfully — Loading in 10 seconds...')
         // ✅ 3000ms wait — Render wake up aagum varaikkum
-        setTimeout(() => navigate(`/workflows/${newId}/edit`), 5000)
+        setTimeout(() => navigate(`/workflows/${newId}/edit`), 1000)
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save workflow')
