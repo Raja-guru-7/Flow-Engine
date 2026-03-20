@@ -21,11 +21,14 @@ const stepRoutes = require('./routes/stepRoutes');
 const ruleRoutes = require('./routes/ruleRoutes');
 const executionRoutes = require('./routes/executionRoutes');
 
-app.use('/workflows', workflowRoutes);
+// ✅ Specific routes FIRST
 app.use('/workflows/:workflow_id/steps', stepRoutes);
 app.use('/steps/:step_id/rules', ruleRoutes);
 app.use('/steps', stepRoutes);
 app.use('/rules', ruleRoutes);
+
+// ✅ General routes LAST
+app.use('/workflows', workflowRoutes);
 app.use('/executions', executionRoutes);
 
 app.get('/', (req, res) => {
