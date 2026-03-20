@@ -20,21 +20,18 @@ export default function WorkflowEditor() {
   const navigate = useNavigate()
   const isEdit = Boolean(id)
 
-  // Workflow state
   const [name, setName] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [inputSchema, setInputSchema] = useState('{}')
   const [startStepId, setStartStepId] = useState('')
   const [steps, setSteps] = useState([])
 
-  // UI state
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [jsonValid, setJsonValid] = useState(true)
 
-  // Step modal state
   const [stepModal, setStepModal] = useState(false)
   const [editingStep, setEditingStep] = useState(null)
   const [stepName, setStepName] = useState('')
@@ -43,7 +40,6 @@ export default function WorkflowEditor() {
   const [stepMeta, setStepMeta] = useState('{}')
   const [stepSaving, setStepSaving] = useState(false)
 
-  // Delete modal state
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -51,7 +47,6 @@ export default function WorkflowEditor() {
     if (isEdit) loadWorkflow()
   }, [id])
 
-  // ✅ FIXED: Removed undefined setWorkflow() and setSchema() calls
   const loadWorkflow = async () => {
     try {
       setLoading(true)
@@ -62,7 +57,8 @@ export default function WorkflowEditor() {
       setInputSchema(JSON.stringify(w.input_schema || {}, null, 2))
       setStartStepId(w.start_step_id || w.start_step || '')
       const stepsRes = await getSteps(id)
-      setSteps(stepsRes.data.data || stepsRes.data || [])
+      const s = stepsRes.data.steps || stepsRes.data.data || stepsRes.data || []
+      setSteps(Array.isArray(s) ? s : [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load workflow')
     } finally {
@@ -101,7 +97,8 @@ export default function WorkflowEditor() {
         const res = await createWorkflow(payload)
         const newId = res.data.data?._id || res.data._id || res.data.data?.id || res.data.id
         setSuccess('Workflow created successfully')
-        setTimeout(() => navigate(`/workflows/${newId}/edit`), 1000)
+        // ✅ 3000ms wait — Render wake up aagum varaikkum
+        setTimeout(() => navigate(`/workflows/${newId}/edit`), 3000)
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save workflow')
@@ -123,7 +120,7 @@ export default function WorkflowEditor() {
   const openEditStep = (step) => {
     setEditingStep(step)
     setStepName(step.name || '')
-    setStepType(step.step_type || step.type || 'task')  // ✅ step_type first
+    setStepType(step.step_type || step.type || 'task')
     setStepOrder(step.order || 1)
     setStepMeta(JSON.stringify(step.metadata || {}, null, 2))
     setError('')
@@ -134,7 +131,6 @@ export default function WorkflowEditor() {
     if (!stepName.trim()) { setError('Step name is required'); return }
     if (!isEdit) { setError('Save the workflow first to add steps'); return }
 
-    // ✅ Validate metadata JSON before sending
     let meta = {}
     try {
       meta = stepMeta.trim() ? JSON.parse(stepMeta) : {}
@@ -147,7 +143,7 @@ export default function WorkflowEditor() {
       setStepSaving(true)
       setError('')
       const payload = {
-        workflowId: id,           // ✅ Always include workflowId
+        workflowId: id,
         name: stepName.trim(),
         type: stepType,
         order: Number(stepOrder),
@@ -155,7 +151,7 @@ export default function WorkflowEditor() {
       }
 
       if (editingStep) {
-        const stepId = editingStep.id || editingStep._id  // ✅ UUID first
+        const stepId = editingStep.id || editingStep._id
         await updateStep(stepId, payload)
         setSuccess('Step updated successfully')
       } else {
@@ -166,9 +162,9 @@ export default function WorkflowEditor() {
       setStepModal(false)
       setTimeout(() => setSuccess(''), 3000)
 
-      // Refresh steps list
       const stepsRes = await getSteps(id)
-      setSteps(stepsRes.data.data || stepsRes.data || [])
+      const s = stepsRes.data.steps || stepsRes.data.data || stepsRes.data || []
+      setSteps(Array.isArray(s) ? s : [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save step')
     } finally {
@@ -180,13 +176,14 @@ export default function WorkflowEditor() {
     if (!deleteTarget) return
     try {
       setDeleting(true)
-      const stepId = deleteTarget.id || deleteTarget._id  // ✅ UUID first
+      const stepId = deleteTarget.id || deleteTarget._id
       await deleteStep(stepId)
       setSuccess('Step deleted successfully')
       setDeleteTarget(null)
       setTimeout(() => setSuccess(''), 3000)
       const stepsRes = await getSteps(id)
-      setSteps(stepsRes.data.data || stepsRes.data || [])
+      const s = stepsRes.data.steps || stepsRes.data.data || stepsRes.data || []
+      setSteps(Array.isArray(s) ? s : [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete step')
       setDeleteTarget(null)
@@ -199,7 +196,6 @@ export default function WorkflowEditor() {
 
   return (
     <div>
-      {/* Header */}
       <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link to="/workflows" className="link-hover" style={{ fontSize: '14px', color: '#71717A', textDecoration: 'none' }}>← Back</Link>
@@ -212,20 +208,16 @@ export default function WorkflowEditor() {
         </button>
       </div>
 
-      {/* Success banner */}
       {success && (
         <div style={{ marginBottom: '16px', borderRadius: '12px', border: '1px solid #BBF7D0', background: '#F0FDF4', padding: '12px 16px', fontSize: '14px', fontWeight: 500, color: '#16A34A' }}>
           ✓ {success}
         </div>
       )}
 
-      {/* Error message */}
       <ErrorMessage message={error} onDismiss={() => setError('')} />
 
-      {/* Main grid */}
       <div style={{ marginTop: '16px', display: 'grid', gap: '24px', gridTemplateColumns: '3fr 2fr' }}>
 
-        {/* Left: Workflow Details */}
         <div className="card-hover" style={card}>
           <h3 style={{ marginBottom: '20px', fontSize: '16px', fontWeight: 600, color: '#18181B' }}>Workflow Details</h3>
 
@@ -289,7 +281,6 @@ export default function WorkflowEditor() {
           )}
         </div>
 
-        {/* Right: Steps */}
         <div className="card-hover" style={card}>
           <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#18181B' }}>Steps</h3>
@@ -340,7 +331,6 @@ export default function WorkflowEditor() {
         </div>
       </div>
 
-      {/* Add/Edit Step Modal */}
       <Modal
         isOpen={stepModal}
         onClose={() => { setStepModal(false); setError('') }}
@@ -396,7 +386,6 @@ export default function WorkflowEditor() {
         </div>
       </Modal>
 
-      {/* Delete Confirm Modal */}
       <Modal
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
